@@ -84,17 +84,12 @@ Resources:
         Variables:
             SNS_TOPIC_ARN: !Ref SnsTopic
       Events:
-        # alucloud187EC2Trigger:
+        # alucloud187RDSTrigger:
         #   Type: EventBridgeRule
         #   Properties:
         #     Pattern:
         #       source:
-        #         - 'aws.ec2'
-        #       detail-type:
-        #        - 'EC2 Instance State-change Notification'
-        #       detail:
-        #         state:
-        #           - pending
+        #         - 'aws.rds'
         alucloud187RDSTimer:
           Type: Schedule
           Properties:
