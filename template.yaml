@@ -1,0 +1,104 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+   #Definición Topic SNS
+  SnsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: 'NotifyMe_alucloud187'
+  #Definicion TopicPolicy
+  SnsPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument: 
+        Statement:
+          - Sid: __default_statement_ID
+            Effect: Allow
+            Principal:
+              AWS: "*"
+            Action:
+              - SNS:GetTopicAttributes
+              - SNS:SetTopicAttributes
+              - SNS:AddPermission
+              - SNS:RemovePermission
+              - SNS:DeleteTopic
+              - SNS:Subscribe
+              - SNS:ListSubscriptionsByTopic
+              - SNS:Publish
+              - SNS:Receive
+            Resource:
+              - !Ref SnsTopic
+            Condition:
+              StringEquals:
+                AWS:SourceOwner:
+                  - !Ref "AWS::AccountId"
+          - Sid: EveryoneCanPublish
+            Effect: Allow
+            Principal:
+              AWS: "*"
+            Action: 'sns:Publish'
+            Resource:
+              - !Ref SnsTopic  
+      Topics:
+        - !Ref SnsTopic
+  #Definición funcion Lambda
+  alucloud187EC2Function:
+    Type: AWS::Serverless::Function
+    Description: Esta función Lambda obtendra el número de instancias EC2 activas y enviará un mensaje mediante SNS en caso de superar el limite preestablecido.
+    Properties:
+      CodeUri: ec2_instances/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Timeout: 30
+      Role: arn:aws:iam::974349055189:role/cursocloudaws-lambda-serverless-role
+      Environment:
+        Variables:
+            SNS_TOPIC_ARN: !Ref SnsTopic
+      Events:
+        # alucloud187EC2Trigger:
+        #   Type: EventBridgeRule
+        #   Properties:
+        #     Pattern:
+        #       source:
+        #         - 'aws.ec2'
+        #       detail-type:
+        #        - 'EC2 Instance State-change Notification'
+        #       detail:
+        #         state:
+        #           - pending
+        alucloud187EC2Timer:
+          Type: Schedule
+          Properties:
+            Name: alucloud187-timer
+            Schedule: rate(3 hours)
+  alucloud187RDSFunction:
+    Type: AWS::Serverless::Function
+    Description: Esta función Lambda obtendra el número de instancias RDS activas y enviará un mensaje mediante SNS en caso de superar el limite preestablecido.
+    Properties:
+      CodeUri: rds_instances/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Timeout: 30
+      Role: arn:aws:iam::974349055189:role/cursocloudaws-lambda-serverless-role
+      Environment:
+        Variables:
+            SNS_TOPIC_ARN: !Ref SnsTopic
+      Events:
+        # alucloud187EC2Trigger:
+        #   Type: EventBridgeRule
+        #   Properties:
+        #     Pattern:
+        #       source:
+        #         - 'aws.ec2'
+        #       detail-type:
+        #        - 'EC2 Instance State-change Notification'
+        #       detail:
+        #         state:
+        #           - pending
+        alucloud187RDSTimer:
+          Type: Schedule
+          Properties:
+            Name: alucloud187-timer-2
+            Schedule: rate(3 hours)
+  
+  
